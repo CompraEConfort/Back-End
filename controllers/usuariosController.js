@@ -17,6 +17,7 @@ exports.cadastrarUsuario = (req, res, next) => {
                         [req.body.name, req.body.email, hash, req.body.endereco, req.body.complemento, req.body.cidade, req.body.bairro, req.body.cep, req.body.telefone],
                         (error, results) => {
                             conn.release();
+                            
                             if (error) { return res.status(500).send({ error: error }) }
                             response = {
                                 mensagem: 'Usuario criado com sucesso',

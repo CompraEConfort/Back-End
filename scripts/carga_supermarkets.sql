@@ -1,6 +1,7 @@
 INSERT INTO supermarkets (name, city, image_link) 
 VALUES ('Supermarket', 'recife', 'https://i.pinimg.com/736x/ec/12/a1/ec12a1c3a1df9b82b6affc62dce612cd.jpg');
 
+
 INSERT INTO supermarkets (name, city, image_link) 
 VALUES ('Happy Shopping', 'recife', 'https://img.freepik.com/vetores-gratis/logotipo-bonito-carrinho-de-compras_23-2148453859.jpg?size=338&ext=jpg');
 

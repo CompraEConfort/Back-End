@@ -4,6 +4,7 @@ const login = require('../middleware/login');
 
 const supermercadoController = require('../controllers/supermercadoController');
 
+
 router.get('/', login.obrigatorio, supermercadoController.getSupermercado);
 router.post('/cadastro', supermercadoController.postSupermercado);
 router.get('/:id_supermercado', login.obrigatorio, supermercadoController.getSupermercadoId);

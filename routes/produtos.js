@@ -4,6 +4,7 @@ const login = require('../middleware/login');
 
 const ProdutoController = require('../controllers/produtosController');
 
+
 router.get('/', ProdutoController.getProdutos);
 router.post('/', ProdutoController.postProdutos);
 router.get('/:id_produto', ProdutoController.getProdutoId);
