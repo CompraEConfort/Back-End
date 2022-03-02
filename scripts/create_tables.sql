@@ -41,6 +41,7 @@ create table supermarkets (
     PRIMARY KEY (id_supermarket)
 );
 
+
 /*Tabela da associação N:N de produtos e supermercados*/
 CREATE TABLE products_supermarkets(
 	  id_supermarket int(11) NOT NULL,

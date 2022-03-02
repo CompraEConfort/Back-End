@@ -16,6 +16,7 @@ exports.getPedidos = (req, res, next) => {
                 if (error) { return res.status(500).send({ error: error }) }
                 const response = {
                     pedidos: result.map(ped => {
+                        
                         return {
                             id_pedido: ped.id_order,
                             quantidade: ped.quantity,

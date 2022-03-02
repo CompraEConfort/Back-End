@@ -46,6 +46,7 @@ exports.getSupermercado = (req, res, next) => {
                                 conn.query(
                                     'INSERT INTO supermarkets (name, email, password, cnpj, address, neighborhood, city, cep, telefone, image_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
                         [
+                            
                             req.body.name,
                             req.body.email,
                             hash,
