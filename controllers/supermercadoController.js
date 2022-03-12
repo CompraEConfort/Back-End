@@ -2,51 +2,51 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mysql = require('../mysql').pool;
 
-exports.getSupermercado = (req, res, next) => {    
+exports.getSupermercado = (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
-          'SELECT * FROM supermarkets;',
-          (error, result) => {
-            if (error) { return res.status(500).send({ error: error }) }
-            const response = {
-                quantidade: result.length,
-                produtos: result.map(prod => {
-                    return {
-                        id_supermercado: prod.id_supermarket,
-                        nome: prod.name,
-                        email: prod.email,
-                        cnpj: prod.cnpj,    
-                        endereco: prod.address,
-                        Bairro: prod.neighborhood,
-                        Cidade: prod.city,
-                        Cep: prod.cep,
-                        Telefone: prod.telefone,
-                        imagem: prod.image_link
-                    }
-                })
+            'SELECT * FROM supermarkets;',
+            (error, result) => {
+                if (error) { return res.status(500).send({ error: error }) }
+                const response = {
+                    quantidade: result.length,
+                    produtos: result.map(prod => {
+                        return {
+                            id_supermercado: prod.id_supermarket,
+                            nome: prod.name,
+                            email: prod.email,
+                            cnpj: prod.cnpj,
+                            endereco: prod.address,
+                            Bairro: prod.neighborhood,
+                            Cidade: prod.city,
+                            Cep: prod.cep,
+                            Telefone: prod.telefone,
+                            imagem: prod.image_link
+                        }
+                    })
+                }
+                return res.status(200).send(response);
             }
-            return res.status(200).send(response);
-          }  
         )
     });
 };
 
-            exports.postSupermercado = (req, res) => {
-                console.log(req.body.name);
-                mysql.getConnection((error, conn) => {
-                    if (error) { return res.status(500).send({ error: error }) }
-                    conn.query('SELECT email FROM supermarkets WHERE email = ?', [req.body.email], (error, results) => {
-                        if (error) { return res.status(500).send({ error: error }) }
-                        if (results.length > 0) {
-                            res.status(409).send({ mensagem: 'Supermercado já cadastrado'})
-                        } else {
-                            bcrypt.hash(req.body.senha, 10, (errBcrypt, hash) => {
-                                if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
-                                conn.query(
-                                    'INSERT INTO supermarkets (name, email, password, cnpj, address, neighborhood, city, cep, telefone, image_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+exports.postSupermercado = (req, res) => {
+    console.log(req.body.name);
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        conn.query('SELECT email FROM supermarkets WHERE email = ?', [req.body.email], (error, results) => {
+            if (error) { return res.status(500).send({ error: error }) }
+            if (results.length > 0) {
+                res.status(409).send({ mensagem: 'Supermercado já cadastrado' })
+            } else {
+                bcrypt.hash(req.body.senha, 10, (errBcrypt, hash) => {
+                    if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
+                    conn.query(
+                        'INSERT INTO supermarkets (name, email, password, cnpj, address, neighborhood, city, cep, telefone, image_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
                         [
-                            
+
                             req.body.name,
                             req.body.email,
                             hash,
@@ -68,7 +68,7 @@ exports.getSupermercado = (req, res, next) => {
                                     nome: req.body.name,
                                     email: req.body.email,
                                     senha: req.body.senha,
-                                    cnpj: req.body.cnpj,    
+                                    cnpj: req.body.cnpj,
                                     endereco: req.body.endereco,
                                     Bairro: req.body.bairro,
                                     Cidade: req.body.cidade,
@@ -78,13 +78,13 @@ exports.getSupermercado = (req, res, next) => {
                                 }
                             }
                             return res.status(201).send(response);
-            
-                         }
+
+                        }
                     )
                 });
             }
-        });       
-    });  
+        });
+    });
 };
 
 exports.getSupermercadoId = (req, res, next) => {
@@ -108,9 +108,9 @@ exports.getSupermercadoId = (req, res, next) => {
                     }
                 }
                 return res.status(200).send(response);
-            }  
+            }
         )
-    });  
+    });
 };
 
 exports.getSupermercadoNome = (req, res, next) => {
@@ -143,9 +143,9 @@ exports.getSupermercadoNome = (req, res, next) => {
                     })
                 }
                 return res.status(200).send(response);
-            }  
+            }
         )
-    });  
+    });
 };
 
 exports.getCorredoresSupermercado = (req, res, next) => {
@@ -172,9 +172,9 @@ exports.getCorredoresSupermercado = (req, res, next) => {
                     })
                 }
                 return res.status(200).send(response);
-            }  
+            }
         )
-    });  
+    });
 };
 
 exports.patchSupermercado = (req, res, next) => {
@@ -185,7 +185,7 @@ exports.patchSupermercado = (req, res, next) => {
                 SET name           = ?
               WHERE id_supermarket = ?`,
             [
-                req.body.name, 
+                req.body.name,
                 req.body.id
             ],
             (error, result, field) => {
@@ -200,8 +200,8 @@ exports.patchSupermercado = (req, res, next) => {
                 }
                 return res.status(202).send(response);
             }
-        )      
-    });  
+        )
+    });
 };
 
 exports.deleteSupermercado = (req, res, next) => {
@@ -217,6 +217,6 @@ exports.deleteSupermercado = (req, res, next) => {
                 }
                 return res.status(202).send(response);
             }
-        )      
-    }); 
+        )
+    });
 };
