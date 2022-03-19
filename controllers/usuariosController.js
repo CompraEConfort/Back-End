@@ -13,7 +13,7 @@ exports.cadastrarUsuario = (req, res, next) => {
                 bcrypt.hash(req.body.senha, 10, (errBcrypt, hash) => {
                     if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
                     conn.query(
-                        `INSERT INTO users (name, email, password, endereco, complemento, cidade, bairro, cep, telefone ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        `INSERT INTO users (name, email, password, endereco, complemento, cidade, bairro, cep, telefone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                         [req.body.name, req.body.email, hash, req.body.endereco, req.body.complemento, req.body.cidade, req.body.bairro, req.body.cep, req.body.telefone],
                         (error, results) => {
                             conn.release();
@@ -23,7 +23,7 @@ exports.cadastrarUsuario = (req, res, next) => {
                                 mensagem: 'Usuario criado com sucesso',
                                 usuarioCriado: {
                                     id_usuario: results.insertId,
-                                    email: req.body.email
+                                    email: req.body.email,
                                 }   
                             }                   
                             return res.status(201).send(response);
