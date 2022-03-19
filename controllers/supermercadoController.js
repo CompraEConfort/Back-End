@@ -53,7 +53,7 @@ exports.postSupermercado = (req, res) => {
                             req.body.cnpj,
                             req.body.endereco,
                             req.body.bairro,
-                            req.body.cidade.toLowerCase,
+                            req.body.cidade.toLowerCase(),
                             req.body.cep,
                             req.body.telefone,
                             req.body.imagem

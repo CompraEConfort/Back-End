@@ -18,6 +18,8 @@ exports.cadastrarUsuario = (req, res, next) => {
                         (error, results) => {
                             conn.release();
                             
+                            var userid = id_usuario + email;
+                            localStorage.user = userid
                             if (error) { return res.status(500).send({ error: error }) }
                             response = {
                                 mensagem: 'Usuario criado com sucesso',
@@ -27,6 +29,7 @@ exports.cadastrarUsuario = (req, res, next) => {
                                 }   
                             }                   
                             return res.status(201).send(response);
+                           
                         }
                     )
                 });
@@ -62,9 +65,48 @@ exports.login = (req, res, next) => {
                         mensagem: 'Autenticado com sucesso',
                         token: token
                     });  
+               
                 }
                 return res.status(401).send({ mensagem: 'Falha na autenticação' })
             });            
         });
     });
+};
+
+exports.patchUser = (req, res, next) => {
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        conn.query(
+            `UPDATE users
+                SET name = ?, endereco = ?, complemento = ?, cidade = ?, bairro = ?, cep =  ?, telefone = ?
+              WHERE id = 9`,
+            [
+                req.body.name, 
+                req.body.endereco,
+                req.body.complemento,
+                req.body.cidade,
+                req.body.bairro,
+                req.body.cep,
+                req.body.telefone
+            ],
+            (error, result, field) => {
+                conn.release();
+                if (error) { return res.status(500).send({ error: error }) }
+                const response = {
+                    mensagem: 'Suas mudanças foram salvas ! ',
+                    usuarioAtualizado: {
+                        id_usuario: req.body.id,
+                        nome: req.body.name,
+                        endereco: req.body.endereco,
+                        complemento: req.body.complemento,
+                        cidade: req.body.cidade,
+                        bairro: req.body.bairro,
+                        cep: req.body.cep,
+                        telefone: req.body.telefone
+                    }
+                }
+                return res.status(202).send(response);
+            }
+        )      
+    });  
 };
