@@ -24,3 +24,4 @@ exports.opcional = (req, res, next) => {
        next(); 
     }     
 }
+

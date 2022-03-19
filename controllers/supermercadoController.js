@@ -53,7 +53,7 @@ exports.getSupermercado = (req, res, next) => {
                             req.body.cnpj,
                             req.body.endereco,
                             req.body.bairro,
-                            req.body.cidade.toLowerCase,
+                            req.body.cidade.toLowerCase(),
                             req.body.cep,
                             req.body.telefone,
                             req.body.imagem
