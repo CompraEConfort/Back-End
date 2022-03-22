@@ -13,23 +13,20 @@ exports.cadastrarUsuario = (req, res, next) => {
                 bcrypt.hash(req.body.senha, 10, (errBcrypt, hash) => {
                     if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
                     conn.query(
-                        `INSERT INTO users (name, email, password, endereco, complemento, cidade, bairro, cep, telefone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        `INSERT INTO users (name, email, password, endereco, complemento, cidade, bairro, cep, telefone ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                         [req.body.name, req.body.email, hash, req.body.endereco, req.body.complemento, req.body.cidade, req.body.bairro, req.body.cep, req.body.telefone],
                         (error, results) => {
                             conn.release();
                             
-                            var userid = id_usuario + email;
-                            localStorage.user = userid
                             if (error) { return res.status(500).send({ error: error }) }
                             response = {
                                 mensagem: 'Usuario criado com sucesso',
                                 usuarioCriado: {
                                     id_usuario: results.insertId,
-                                    email: req.body.email,
+                                    email: req.body.email
                                 }   
                             }                   
                             return res.status(201).send(response);
-                           
                         }
                     )
                 });
@@ -39,6 +36,7 @@ exports.cadastrarUsuario = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
+    console.log(req.body);
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         const query = `SELECT * FROM users WHERE email = ?`
@@ -54,7 +52,7 @@ exports.login = (req, res, next) => {
                 }
                 if (result) {
                     const token = jwt.sign({
-                        id_usuario: results[0].id_usuario,
+                        id: results[0].id,
                         email: results[0].email
                     }, 
                     process.env.JWT_KEY,
@@ -63,7 +61,8 @@ exports.login = (req, res, next) => {
                     });
                     return res.status(200).send({ 
                         mensagem: 'Autenticado com sucesso',
-                        token: token
+                        token: token,
+                        user: results[0]
                     });  
                
                 }
@@ -79,7 +78,7 @@ exports.patchUser = (req, res, next) => {
         conn.query(
             `UPDATE users
                 SET name = ?, endereco = ?, complemento = ?, cidade = ?, bairro = ?, cep =  ?, telefone = ?
-              WHERE id = 9`,
+              WHERE id = ?`,
             [
                 req.body.name, 
                 req.body.endereco,
@@ -87,26 +86,72 @@ exports.patchUser = (req, res, next) => {
                 req.body.cidade,
                 req.body.bairro,
                 req.body.cep,
-                req.body.telefone
+                req.body.telefone,
+                req.body.id
             ],
             (error, result, field) => {
                 conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
-                const response = {
-                    mensagem: 'Suas mudanças foram salvas ! ',
-                    usuarioAtualizado: {
-                        id_usuario: req.body.id,
-                        nome: req.body.name,
-                        endereco: req.body.endereco,
-                        complemento: req.body.complemento,
-                        cidade: req.body.cidade,
-                        bairro: req.body.bairro,
-                        cep: req.body.cep,
-                        telefone: req.body.telefone
+                conn.query(`SELECT * FROM users WHERE id = ?`, [req.body.id], (error, result, field) => {
+                    if (error) { return res.status(500).send({ error: error }) }
+                    const response = {
+                        mensagem: 'Suas mudanças foram salvas ! ',
+                        usuarioAtualizado: result[0]
                     }
-                }
-                return res.status(202).send(response);
+                    return res.status(202).send(response);
+                })
+                
             }
         )      
     });  
 };
+
+exports.deleteUser = (req, res, next) => {
+    console.log(req.body);
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        conn.query(
+            `DELETE FROM users WHERE id = ?`, [req.body.id],
+            (error, result, field) => {
+                conn.release();
+                if (error) { return res.status(500).send({ error: error }) }
+                const response = {
+                    mensagem: 'Perfil removido com sucesso'
+                }
+                return res.status(202).send(response);
+            }
+        )
+    });
+};
+
+exports.getUser = (req, res, next) => {
+    // console.log(req.headers);
+    const token = req.headers.authorization
+    const jwt_payload = jwt.verify(token, process.env.JWT_KEY)
+    const id = jwt_payload.id
+    
+
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        conn.query(
+            `SELECT * FROM users WHERE id = ?`, [id],
+            (error, result, field) => {
+                conn.release();
+                if (error) { return res.status(500).send({ error: error }) }
+                console.log(result[0]);
+                result = result[0]
+                const response = {
+                    nome: result.name,
+                    email: result.email,
+                    endereco: result.endereco,
+                    complemento: result.complemento,
+                    cidade: result.cidade,
+                    bairro: result.bairro,
+                    cep: result.cep,
+                    telefone: result.telefone,
+                }
+                return res.status(202).send(response);
+            }
+        )
+    });
+}
