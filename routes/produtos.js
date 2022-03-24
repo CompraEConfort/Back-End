@@ -6,7 +6,7 @@ const ProdutoController = require('../controllers/produtosController');
 
 
 router.get('/', ProdutoController.getProdutos);
-router.post('/', ProdutoController.postProdutos);
+router.post('/add', ProdutoController.postProdutos);
 router.get('/:id_produto', ProdutoController.getProdutoId);
 router.get('/corredores/:nome_corredor', ProdutoController.getProdutoByCategory);
 router.patch('/', ProdutoController.patchProduto);
