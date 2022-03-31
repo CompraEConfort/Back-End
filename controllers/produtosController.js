@@ -3,18 +3,21 @@ const mysql = require('../mysql').pool;
 exports.getProdutos = (req, res, next) => {    
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
+        // console.log("request body",req.body);
         conn.query(
-          'SELECT * FROM products;',
+            `SELECT * FROM products, products_supermarkets WHERE products.id_product = products_supermarkets.id_product AND products_supermarkets.id_supermarket = ?`, [req.query['id_supermarket']],
           (error, result, fields) => {
             if (error) { return res.status(500).send({ error: error }) }
+            // console.log(result);
             const response = {
                 quantidade: result.length,
                 produtos: result.map(prod => {
                     return {
-                        id_produto: prod.id,
+                        id_produto: prod.id_product,
                         nome: prod.name,
                         preco: prod.value,
-                        imagem_produto: prod.imagem_produto
+                        categoria: prod.category,
+                        imagem_produto: prod.image_link
                     }
                 })
             }
@@ -49,11 +52,11 @@ exports.postProdutos = (req, res, next) => {
                         category: result.category,
                         image_link: result.image_link,
 
-                        // request: {
-                        //     tipo: 'GET',
-                        //     descricao: 'Retorna todos os produtos',
-                        //     url: 'http://localhost:3000/produtos'
-                        // }
+                        request: {
+                            tipo: 'GET',
+                            descricao: 'Retorna todos os produtos',
+                            url: 'http://localhost:3000/produtos'
+                        }
                     }
                 }
                 return res.status(201).send(response);
@@ -61,28 +64,6 @@ exports.postProdutos = (req, res, next) => {
         )      
     });   
 };
-
-// exports.getaddProd = (req, res, next) => {
-//     mysql.getConnection((error, conn) => {
-//         if (error) { return res.status(500).send({ error: error }) }
-//         conn.query(
-//             `SELECT * FROM products WHERE id_product = ?`, [id],
-//             (error, result, field) => {
-//                 conn.release();
-//                 if (error) { return res.status(500).send({ error: error }) }
-//                 console.log(result[0]);
-//                 result = result[0]
-//                 const response = {
-//                     nome: result.name,
-//                     preco: result.value,
-//                     categoria: result.category,
-//                     imagem: result.image_link,
-//                 }
-//                 return res.status(202).send(response);
-//             }
-//         )
-//     });
-// }
 
 
 exports.getProdutoId = (req, res, next) => {
@@ -147,6 +128,42 @@ exports.getProdutoByCategory = (req, res, next) => {
     });  
 };
 
+// exports.getaddProduto = (req, res, next) => {
+//     mysql.getConnection((error, conn) => {
+//         if (error) { return res.status(500).send({ error: error }) }
+//         var query = ''
+//         query += ' SELECT * '
+//         query += ' FROM products ' 
+//         query += ' WHERE products.category = ?'
+    
+//         conn.query(
+//             query,
+//             [req.params.nome_corredor],
+//             (error, result, fields) => {
+//                 if (error) { return res.status(500).send({ error: error }) }
+//                 if (result.length == 0) {
+//                     return res.status(404).send({
+                        
+//                         mensagem: 'Não foi encontrado produtos para a categoria ' + req.body.nomeCorredor
+//                     });
+//                 }
+//                 const response = {
+//                     quantidade: result.length,
+//                     produtos: result.map(prod => {
+//                         return {
+//                             idProduto: prod.id_product,
+//                             name: prod.name,
+//                             value: prod.value,
+//                             imageLink: prod.image_link
+//                         }
+//                     })
+//                 }
+//                 return res.status(200).send(response);
+//             }  
+//         )
+//     });  
+// };
+
 exports.getProductsByCategoryAndSupermarketId = (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
@@ -189,25 +206,25 @@ exports.patchProduto = (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
-            `UPDATE products
-                SET name       = ?
-              WHERE id         = ?`,
+           `UPDATE products SET name = ?, value = ?, image_link = ?, category = ? WHERE id_product = ?`,
             [
                 req.body.name, 
-                req.body.id
+                req.body.value,
+                req.body.image_link,
+                req.body.category,
+                req.body.id_product
             ],
             (error, result, field) => {
                 conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
+                conn.query(`SELECT * FROM products WHERE id_product = ?`, [req.body.id_product], (error, result, field) => {
+                    if (error) { return res.status(500).send({ error: error }) }
                 const response = {
                     mensagem: 'Produto atualizado com sucesso',
-                    produtoAtualizado: {
-                        id_produto: req.body.id,
-                        nome: req.body.name,
-                        preco: req.body.value
-                    }
-                }
+                    produtoAtualizado: result[0]                    
+                }                
                 return res.status(202).send(response);
+            })
             }
         )      
     });  
@@ -216,8 +233,9 @@ exports.patchProduto = (req, res, next) => {
 exports.deleteProduto = (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
+        console.log(req.query.ids);
         conn.query(
-            `DELETE FROM products WHERE id = ?`, [req.body.id],
+            `DELETE FROM products WHERE id_product IN (${req.query.ids.join(',')})`, [],
             (error, result, field) => {
                 conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
