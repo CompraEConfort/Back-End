@@ -87,6 +87,77 @@ exports.postSupermercado = (req, res) => {
     });
 };
 
+exports.loginSupermercado = (req, res, next) => {
+    // console.log(req.body);
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        const query = `SELECT * FROM supermarkets WHERE email = ?`
+        conn.query(query, [req.body.email], (error, results, fields) => {
+            console.log(results);
+            if (error) { return res.status(500).send({ error: error }) }
+            if (results.length < 1) {
+                return res.status(401).send({ mensagem: 'Falha na autenticação' })
+            }
+            bcrypt.compare(req.body.senha, results[0].password, (err, result) => {
+                if (err) {
+                    return res.status(401).send({ mensagem: 'Falha na autenticação' })
+                }
+                if (result) {
+                    const tokenMerc = jwt.sign({
+                        id: results[0].id_supermarket,
+                        email: results[0].email
+                    }, 
+                    process.env.JWT_KEY,
+                    {
+                        expiresIn: "1h"
+                    });
+                    return res.status(200).send({ 
+                        mensagem: 'Autenticado com sucesso',
+                        tokenMerc: tokenMerc,
+                        userMercado: results[0]
+                    });  
+               
+                }
+                return res.status(401).send({ mensagem: 'Falha na autenticação' })
+            });            
+        });
+    });
+};
+
+exports.getUserMercado = (req, res, next) => {
+    // console.log(req.headers);
+    const tokenMerc = req.headers.authorization
+    const jwt_payload = jwt.verify(tokenMerc, process.env.JWT_KEY)
+    const id_supermarket = jwt_payload.id_supermarket
+    
+
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        conn.query(
+            `SELECT * FROM supermarkets WHERE id_supermarket = ?`, [id_supermarket],
+            (error, result, field) => {
+                conn.release();
+                if (error) { return res.status(500).send({ error: error }) }
+                console.log(result[0]);
+                result = result[0]
+                const response = {
+                    nome: result.name,
+                    email: result.email,
+                    cnpj: result.cnpj,
+                    endereco: result.address,
+                    complemento: result.complemento,
+                    cidade: result.city,
+                    bairro: result.neighborhood,
+                    cep: result.cep,
+                    telefone: result.telefone,
+                    image: result.imagem_link
+                }
+                return res.status(202).send(response);
+            }
+        )
+    });
+}
+
 exports.getSupermercadoId = (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
@@ -182,23 +253,29 @@ exports.patchSupermercado = (req, res, next) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
             `UPDATE supermarkets
-                SET name           = ?
+                SET name = ?, address = ?, city = ?, neighborhood = ?, cep = ?, telefone = ?
               WHERE id_supermarket = ?`,
             [
-                req.body.name,
-                req.body.id
+                req.body.name, 
+                req.body.endereco,
+                req.body.cidade,
+                req.body.bairro,
+                req.body.cep,
+                req.body.telefone,
+                // req.body.image_link,
+                req.body.id_supermarket
             ],
             (error, result, field) => {
                 conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
-                const response = {
-                    mensagem: 'Supermercado atualizado com sucesso',
-                    produtoAtualizado: {
-                        id_produto: req.body.id,
-                        nome: req.body.name,
+                conn.query(`SELECT * FROM supermarkets WHERE id_supermarket = ?`, [req.body.id_supermarket], (error, result, field) => {
+                    if (error) { return res.status(500).send({ error: error }) }
+                    const response = {
+                        mensagem: 'Suas mudanças foram salvas ! ',
+                        mercadoAtualizado: result[0]
                     }
-                }
-                return res.status(202).send(response);
+                    return res.status(202).send(response);
+                })
             }
         )
     });

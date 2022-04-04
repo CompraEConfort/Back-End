@@ -11,5 +11,5 @@ router.get('/addProdutos/:id_produto', ProdutoController.getProdutoId);
 router.get('/corredores/:nome_corredor', ProdutoController.getProdutoByCategory);
 // router.get('/getProdutos', ProdutoController.getProdutos);
 router.patch('/', ProdutoController.patchProduto);
-router.delete('/', login.obrigatorio, ProdutoController.deleteProduto);
+router.delete('/', login.opcional, ProdutoController.deleteProduto);
 module.exports = router;

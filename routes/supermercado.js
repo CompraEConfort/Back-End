@@ -7,10 +7,13 @@ const supermercadoController = require('../controllers/supermercadoController');
 
 router.get('/', login.obrigatorio, supermercadoController.getSupermercado);
 router.post('/cadastro', supermercadoController.postSupermercado);
+router.post('/loginMercado', supermercadoController.loginSupermercado);
+router.get('/loginMercado', supermercadoController.loginSupermercado);
+router.get('/perfilMercado',supermercadoController.getUserMercado);
 router.get('/:id_supermercado', login.obrigatorio, supermercadoController.getSupermercadoId);
 router.get('/city/:nome_supermercado', supermercadoController.getSupermercadoNome);
 router.get('/corredores/:codigo_supermercado', supermercadoController.getCorredoresSupermercado);
-router.patch('/', login.obrigatorio, supermercadoController.patchSupermercado);
-router.delete('/', login.obrigatorio, supermercadoController.deleteSupermercado);
+router.patch('/', login.opcional, supermercadoController.patchSupermercado);
+router.delete('/', login.opcional, supermercadoController.deleteSupermercado);
 
 module.exports = router;

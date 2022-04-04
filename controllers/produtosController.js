@@ -28,7 +28,7 @@ exports.getProdutos = (req, res, next) => {
 };
 
 exports.postProdutos = (req, res, next) => {
-    console.log(req.usuario);
+    console.log(req.body);
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
@@ -41,25 +41,26 @@ exports.postProdutos = (req, res, next) => {
                 req.body.image_link,
             ],
             (error, result, field) => {
-                conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
-                const response = {
-                    mensagem: 'Produto inserido com sucesso',
-                    produtoCriado: {
-                        id_product: result.id_product,
-                        name: result.name,
-                        value: result.value,
-                        category: result.category,
-                        image_link: result.image_link,
 
-                        request: {
-                            tipo: 'GET',
-                            descricao: 'Retorna todos os produtos',
-                            url: 'http://localhost:3000/produtos'
+                console.log(result);
+
+                let idProduto = result.insertId
+
+                conn.query(
+                    'INSERT INTO products_supermarkets (id_supermarket, id_product) VALUES (?,?)',
+                    [req.body.id_supermarket, idProduto],
+                    (error, result, field) => {
+                        conn.release();
+                        if (error) { return res.status(500).send({ error: error }) }
+
+                        const response = {
+                            mensagem: 'Produto inserido com sucesso',
+                            id_product: idProduto
                         }
+                        return res.status(201).send(response);
                     }
-                }
-                return res.status(201).send(response);
+                )
             }
         )      
     });   
@@ -221,7 +222,7 @@ exports.patchProduto = (req, res, next) => {
                     if (error) { return res.status(500).send({ error: error }) }
                 const response = {
                     mensagem: 'Produto atualizado com sucesso',
-                    produtoAtualizado: result[0]                    
+                    produtoAtualizado: result[0]
                 }                
                 return res.status(202).send(response);
             })
@@ -229,6 +230,7 @@ exports.patchProduto = (req, res, next) => {
         )      
     });  
 };
+
 
 exports.deleteProduto = (req, res, next) => {
     mysql.getConnection((error, conn) => {
