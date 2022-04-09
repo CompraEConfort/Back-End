@@ -66,7 +66,6 @@ exports.postProdutos = (req, res, next) => {
     });   
 };
 
-
 exports.getProdutoId = (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
@@ -230,7 +229,6 @@ exports.patchProduto = (req, res, next) => {
         )      
     });  
 };
-
 
 exports.deleteProduto = (req, res, next) => {
     mysql.getConnection((error, conn) => {

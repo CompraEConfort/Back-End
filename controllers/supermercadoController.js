@@ -253,7 +253,7 @@ exports.patchSupermercado = (req, res, next) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
             `UPDATE supermarkets
-                SET name = ?, address = ?, city = ?, neighborhood = ?, cep = ?, telefone = ?
+                SET name = ?, address = ?, city = ?, neighborhood = ?, cep = ?, telefone = ?, image_link = ?
               WHERE id_supermarket = ?`,
             [
                 req.body.name, 
@@ -262,7 +262,7 @@ exports.patchSupermercado = (req, res, next) => {
                 req.body.bairro,
                 req.body.cep,
                 req.body.telefone,
-                // req.body.image_link,
+                req.body.imagem,
                 req.body.id_supermarket
             ],
             (error, result, field) => {
@@ -282,17 +282,20 @@ exports.patchSupermercado = (req, res, next) => {
 };
 
 exports.deleteSupermercado = (req, res, next) => {
+    
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
-            `DELETE FROM supermarkets WHERE id_supermarket = ?`, [req.body.id],
+            `DELETE FROM supermarkets WHERE id_supermarket = ?`, [req.body.id_supermarket],
             (error, result, field) => {
                 conn.release();
-                if (error) { return res.status(500).send({ error: error }) }
-                const response = {
-                    mensagem: 'Supermercado removido com sucesso'
-                }
-                return res.status(202).send(response);
+                    if (error) { return res.status(500).send({ error: error }) }
+                    const response = {
+                        mensagem: 'Mercado Deletado',
+                        mercadoDeletado: result[0]
+                    }
+                    return res.status(202).send(response);
+             
             }
         )
     });
