@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mysql = require('../mysql').pool;
+const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
 
 exports.cadastrarUsuario = (req, res, next) => {
     mysql.getConnection((error, conn) => {
@@ -13,8 +16,8 @@ exports.cadastrarUsuario = (req, res, next) => {
                 bcrypt.hash(req.body.senha, 10, (errBcrypt, hash) => {
                     if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
                     conn.query(
-                        `INSERT INTO users (name, email, password, endereco, complemento, cidade, bairro, cep, telefone ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                        [req.body.name, req.body.email, hash, req.body.endereco, req.body.complemento, req.body.cidade, req.body.bairro, req.body.cep, req.body.telefone],
+                        `INSERT INTO users (name, email, password, endereco, complemento, cidade, bairro, cep, telefone, imagem ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [req.body.name, req.body.email, hash, req.body.endereco, req.body.complemento, req.body.cidade, req.body.bairro, req.body.cep, req.body.telefone, req.body.imagem],
                         (error, results) => {
                             conn.release();
                             
@@ -149,9 +152,52 @@ exports.getUser = (req, res, next) => {
                     bairro: result.bairro,
                     cep: result.cep,
                     telefone: result.telefone,
+                    imagem: result.imagem,
                 }
                 return res.status(202).send(response);
             }
         )
     });
+}
+
+exports.uploadImage = (req, res, next) => {
+    const form = new formidable.IncomingForm();
+
+    form.parse(req, (err, fields, files) => {
+
+        if (err) res.send('Erro');
+
+        const oldpath = files.filetoupload.filepath;
+        const imageType = files.filetoupload.originalFilename.split('.')[1];
+        const idUser = fields.idUser;
+        if (!idUser) return res.status(401).send('Usuario não especificado')
+
+        let imageName = `user_${idUser}.${imageType}`;
+        const newpath = path.join(__dirname, '../images/users/', imageName);
+        
+        try {
+            fs.renameSync(oldpath, newpath);
+
+            const dirPath = `http://localhost:3000/images/users/`
+            const imagePath = dirPath + imageName
+            mysql.getConnection((error, conn) => {
+                if (error) { return res.status(500).send({ error: error }) }
+                conn.query(
+                    `UPDATE users SET imagem = ? WHERE id = ?`, [imagePath, idUser],
+                    (error, result, field) => {
+                        conn.release();
+                        if (error) { return res.status(500).send({ error: error }) }
+                        console.log(result);
+                        const response = {
+                            message: 'Imagem atualizada com sucesso'
+                        }
+                        return res.status(202).send(response);
+                    }
+                )
+                
+            })         
+        } catch (error) {
+            res.status(401).send('Erro ao carregar imagem')
+        }
+    })
 }

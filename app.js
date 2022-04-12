@@ -11,7 +11,7 @@ const rotaUsuarios = require('./routes/usuarios');
 const rotaSupermercado = require('./routes/supermercado');
 
 app.use(morgan('dev'));
-app.use('/uploads', express.static('uploads'));
+app.use('/images', express.static('images'));
 app.use(bodyParser.urlencoded({ extended: false })); // apenas dados simples
 app.use(bodyParser.json()); // JSON de entrada no body
 
