@@ -93,16 +93,17 @@ exports.getProdutoId = (req, res, next) => {
 };
 
 exports.getProdutoByCategory = (req, res, next) => {
+    console.log(req.params);
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         var query = ''
         query += ' SELECT * '
-        query += ' FROM products ' 
-        query += ' WHERE products.category = ?'
+        query += ' FROM products p, products_supermarkets ps' 
+        query += ' WHERE p.category = ? && ps.id_supermarket = ? && p.id_product = ps.id_product'
     
         conn.query(
             query,
-            [req.params.nome_corredor],
+            [req.params.nome_corredor, req.params.id_supermarket],
             (error, result, fields) => {
                 if (error) { return res.status(500).send({ error: error }) }
                 if (result.length == 0) {
