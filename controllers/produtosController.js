@@ -1,4 +1,7 @@
 const mysql = require('../mysql').pool;
+const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
 
 exports.getProdutos = (req, res, next) => {    
     mysql.getConnection((error, conn) => {
@@ -248,3 +251,49 @@ exports.deleteProduto = (req, res, next) => {
         )      
     }); 
 };
+
+exports.uploadProdutoImage = (req, res, next) => {
+    const form = new formidable.IncomingForm();
+
+    form.parse(req, (err, fields, files) => {
+        console.log(fields);
+        if (err) res.send('Erro');
+
+        const oldpath = files.filetoupload.filepath;
+        const imageType = files.filetoupload.originalFilename.split('.')[1];
+        const idProduto = fields.idProduto;
+        if (!idProduto) return res.status(401).send('Usuario não especificado')
+
+        let imageName = `product_${idProduto}.${imageType}`;
+        const newpath = path.join(__dirname, '../images/products/', imageName);
+        
+        try {
+            fs.renameSync(oldpath, newpath);
+
+            const dirPath = `http://localhost:3000/images/products/`
+            const imagePath = dirPath + imageName
+            mysql.getConnection((error, conn) => {
+                console.log(error);
+                if (error) { return res.status(500).send({ error: error }) }
+                conn.query(
+                    `UPDATE products SET image_link = ? WHERE id_product = ?`, [imagePath, idProduto],
+                    (error, result, field) => {
+                        conn.release();
+                        if (error) {
+                            console.log(error);
+                            return res.status(500).send({ error: error }) }
+                        console.log(result);
+                        const response = {
+                            message: 'Imagem atualizada com sucesso',
+                            imagemAtualizada: imagePath
+                        }
+                        return res.status(202).send(response);
+                    }
+                )
+                
+            })         
+        } catch (error) {
+            res.status(401).send('Erro ao carregar imagem')
+        }
+    })
+}

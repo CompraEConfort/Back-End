@@ -60,7 +60,7 @@ exports.login = (req, res, next) => {
                     }, 
                     process.env.JWT_KEY,
                     {
-                        expiresIn: "1h"
+                        expiresIn: "2h"
                     });
                     return res.status(200).send({ 
                         mensagem: 'Autenticado com sucesso',
@@ -97,9 +97,22 @@ exports.patchUser = (req, res, next) => {
                 if (error) { return res.status(500).send({ error: error }) }
                 conn.query(`SELECT * FROM users WHERE id = ?`, [req.body.id], (error, result, field) => {
                     if (error) { return res.status(500).send({ error: error }) }
+                    // console.log(result);
+                    result = result[0]
                     const response = {
                         mensagem: 'Suas mudanças foram salvas ! ',
-                        usuarioAtualizado: result[0]
+                        usuarioAtualizado: {
+                            id: result.id,
+                            nome: result.name,
+                            email: result.email,
+                            endereco: result.endereco,
+                            complemento: result.complemento,
+                            cidade: result.cidade,
+                            bairro: result.bairro,
+                            cep: result.cep,
+                            telefone: result.telefone,
+                            imagem: result.imagem,
+                        }
                     }
                     return res.status(202).send(response);
                 })
@@ -141,9 +154,9 @@ exports.getUser = (req, res, next) => {
             (error, result, field) => {
                 conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
-                console.log(result[0]);
                 result = result[0]
                 const response = {
+                    id: result.id,
                     nome: result.name,
                     email: result.email,
                     endereco: result.endereco,

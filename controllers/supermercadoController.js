@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mysql = require('../mysql').pool;
+const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
 
 exports.getSupermercado = (req, res, next) => {
     mysql.getConnection((error, conn) => {
@@ -104,12 +107,12 @@ exports.loginSupermercado = (req, res, next) => {
                 }
                 if (result) {
                     const tokenMerc = jwt.sign({
-                        id: results[0].id_supermarket,
+                        id_supermarket: results[0].id_supermarket,
                         email: results[0].email
                     }, 
                     process.env.JWT_KEY,
                     {
-                        expiresIn: "1h"
+                        expiresIn: "2h"
                     });
                     return res.status(200).send({ 
                         mensagem: 'Autenticado com sucesso',
@@ -129,7 +132,7 @@ exports.getUserMercado = (req, res, next) => {
     const tokenMerc = req.headers.authorization
     const jwt_payload = jwt.verify(tokenMerc, process.env.JWT_KEY)
     const id_supermarket = jwt_payload.id_supermarket
-    
+    if (!id_supermarket) return res.status(401).send('Id_supermarket não está presente no token, ou token está mal formado')
 
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
@@ -138,9 +141,9 @@ exports.getUserMercado = (req, res, next) => {
             (error, result, field) => {
                 conn.release();
                 if (error) { return res.status(500).send({ error: error }) }
-                console.log(result[0]);
                 result = result[0]
                 const response = {
+                    id_supermarket: result.id_supermarket,
                     nome: result.name,
                     email: result.email,
                     cnpj: result.cnpj,
@@ -150,7 +153,7 @@ exports.getUserMercado = (req, res, next) => {
                     bairro: result.neighborhood,
                     cep: result.cep,
                     telefone: result.telefone,
-                    image: result.imagem_link
+                    image_link: result.image_link
                 }
                 return res.status(202).send(response);
             }
@@ -253,7 +256,7 @@ exports.patchSupermercado = (req, res, next) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
             `UPDATE supermarkets
-                SET name = ?, address = ?, city = ?, neighborhood = ?, cep = ?, telefone = ?, image_link = ?
+                SET name = ?, address = ?, city = ?, neighborhood = ?, cep = ?, telefone = ?
               WHERE id_supermarket = ?`,
             [
                 req.body.name, 
@@ -262,7 +265,6 @@ exports.patchSupermercado = (req, res, next) => {
                 req.body.bairro,
                 req.body.cep,
                 req.body.telefone,
-                req.body.imagem,
                 req.body.id_supermarket
             ],
             (error, result, field) => {
@@ -270,9 +272,21 @@ exports.patchSupermercado = (req, res, next) => {
                 if (error) { return res.status(500).send({ error: error }) }
                 conn.query(`SELECT * FROM supermarkets WHERE id_supermarket = ?`, [req.body.id_supermarket], (error, result, field) => {
                     if (error) { return res.status(500).send({ error: error }) }
+                    result = result[0]
                     const response = {
                         mensagem: 'Suas mudanças foram salvas ! ',
-                        mercadoAtualizado: result[0]
+                        mercadoAtualizado: {
+                            bairro: result.neighborhood,
+                            cep: result.cep,
+                            cidade: result.city,
+                            cnpj: result.cnpj,
+                            email: result.email,
+                            endereco: result.address,
+                            id_supermarket: result.id_supermarket,
+                            nome: result.name,
+                            telefone: result.telefone,
+                            image_link: result.image_link
+                        }
                     }
                     return res.status(202).send(response);
                 })
@@ -300,3 +314,48 @@ exports.deleteSupermercado = (req, res, next) => {
         )
     });
 };
+exports.uploadMercadoImage = (req, res, next) => {
+    const form = new formidable.IncomingForm();
+
+    form.parse(req, (err, fields, files) => {
+        console.log(fields);
+        if (err) res.send('Erro');
+
+        const oldpath = files.filetoupload.filepath;
+        const imageType = files.filetoupload.originalFilename.split('.')[1];
+        const idMercado = fields.idMercado;
+        if (!idMercado) return res.status(401).send('Usuario não especificado')
+
+        let imageName = `market_${idMercado}.${imageType}`;
+        const newpath = path.join(__dirname, '../images/mercados/', imageName);
+        
+        try {
+            fs.renameSync(oldpath, newpath);
+
+            const dirPath = `http://localhost:3000/images/mercados/`
+            const imagePath = dirPath + imageName
+            mysql.getConnection((error, conn) => {
+                console.log(error);
+                if (error) { return res.status(500).send({ error: error }) }
+                conn.query(
+                    `UPDATE supermarkets SET image_link = ? WHERE id_supermarket = ?`, [imagePath, idMercado],
+                    (error, result, field) => {
+                        conn.release();
+                        if (error) {
+                            console.log(error);
+                            return res.status(500).send({ error: error }) }
+                        console.log(result);
+                        const response = {
+                            message: 'Imagem atualizada com sucesso',
+                            imagemAtualizada: imagePath
+                        }
+                        return res.status(202).send(response);
+                    }
+                )
+                
+            })         
+        } catch (error) {
+            res.status(401).send('Erro ao carregar imagem')
+        }
+    })
+}
