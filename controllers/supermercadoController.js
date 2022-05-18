@@ -162,23 +162,24 @@ exports.getUserMercado = (req, res, next) => {
 }
 
 exports.getSupermercadoId = (req, res, next) => {
+    console.log(req.params);
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
-            'SELECT * FROM products WHERE id = ?',
-            [req.params.id_produto],
+            'SELECT * FROM supermarkets WHERE id_supermarket = ?',
+            [req.params.id_supermarket],
             (error, result, fields) => {
                 if (error) { return res.status(500).send({ error: error }) }
                 if (result.length == 0) {
                     return res.status(404).send({
-                        mensagem: 'Não foi encontrado um produto com o ID ' + req.params.id_produto
+                        mensagem: 'Não foi encontrado um supermercado com o ID ' + req.params.id_supermarket
                     });
                 }
                 const response = {
-                    produto: {
-                        id_produto: result[0].id,
+                    mercado: {
+                        id_supermarket: result[0].id_supermarket,
                         nome: result[0].name,
-                        preco: result[0].value
+                        image_link: result[0].image_link
                     }
                 }
                 return res.status(200).send(response);
@@ -202,17 +203,14 @@ exports.getSupermercadoNome = (req, res, next) => {
                 }
                 const response = {
                     quantidade: result.length,
-                    supermercados: result.map(prod => {
+                    supermercados: result.map(supermarket => {
                         return {
-                            idSupermercado: prod.id_supermarket,
-                            nome: prod.name,
-                            rua: prod.street,
-                            numero: prod.number,
-                            complemento: prod.complement,
-                            bairro: prod.neighborhood,
-                            cidade: prod.city,
-                            cep: prod.cep,
-                            imageLink: prod.image_link
+                            idSupermercado: supermarket.id_supermarket,
+                            nome: supermarket.name,
+                            bairro: supermarket.neighborhood,
+                            cidade: supermarket.city,
+                            cep: supermarket.cep,
+                            imageLink: supermarket.image_link
                         }
                     })
                 }

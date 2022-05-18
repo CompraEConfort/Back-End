@@ -10,7 +10,7 @@ router.post('/cadastro', supermercadoController.postSupermercado);
 router.post('/loginMercado', supermercadoController.loginSupermercado);
 router.get('/loginMercado', supermercadoController.loginSupermercado);
 router.get('/perfilMercado',supermercadoController.getUserMercado);
-router.get('/:id_supermercado', login.obrigatorio, supermercadoController.getSupermercadoId);
+router.get('/:id_supermarket', supermercadoController.getSupermercadoId);
 router.get('/city/:nome_supermercado', supermercadoController.getSupermercadoNome);
 router.get('/corredores/:codigo_supermercado', supermercadoController.getCorredoresSupermercado);
 router.post('/uploadMercadoImage', supermercadoController.uploadMercadoImage);
